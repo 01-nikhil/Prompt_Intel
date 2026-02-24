@@ -99,8 +99,8 @@ async function analyzePrompt(req, res) {
             driftWarning: '',
         };
 
-        // Persist to database
-        await savePrompt({
+        // Persist to database (non-blocking — don't slow down the response)
+        savePrompt({
             promptId,
             versions,
             intent,
@@ -110,7 +110,7 @@ async function analyzePrompt(req, res) {
             scores: finalScores,
             warnings,
             driftWarning: '',
-        });
+        }).catch(() => { });
 
         return res.json(result);
     } catch (err) {
@@ -184,8 +184,8 @@ async function clarifyPrompt(req, res) {
             versions,
         };
 
-        // Update in database
-        await savePrompt({
+        // Update in database (non-blocking)
+        savePrompt({
             promptId,
             versions,
             constraints: selections,
@@ -193,7 +193,7 @@ async function clarifyPrompt(req, res) {
             suggestions,
             scores,
             warnings,
-        });
+        }).catch(() => { });
 
         return res.json(result);
     } catch (err) {
@@ -258,14 +258,14 @@ async function refinePrompt(req, res) {
             versions,
         };
 
-        // Update in database
-        await savePrompt({
+        // Update in database (non-blocking)
+        savePrompt({
             promptId: result.promptId,
             versions,
             scores,
             warnings,
             driftWarning: drift.driftWarning,
-        });
+        }).catch(() => { });
 
         return res.json(result);
     } catch (err) {
