@@ -1,0 +1,24 @@
+/*
+ * panel.css — External stylesheet loaded by the content script
+ *
+ * Because we use Shadow DOM for the panel, these styles only affect
+ * the host element positioning. The actual panel styles are injected
+ * via getPanelStyles() inside the shadow root for full isolation.
+ *
+ * This file ensures the host container doesn't interfere with the page.
+ */
+
+#pi-panel-host {
+  /* Reset all inherited styles from the host page */
+  all: initial;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+/* Allow pointer events on the actual shadow DOM content */
+#pi-panel-host * {
+  pointer-events: auto;
+}

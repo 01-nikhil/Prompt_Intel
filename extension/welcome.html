@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Prompt Intelligence</title>
+    <link rel="stylesheet" href="welcome.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Interactive particle canvas background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Ambient floating blobs -->
+    <div class="ambient-blobs">
+        <div class="blob blob--1"></div>
+        <div class="blob blob--2"></div>
+        <div class="blob blob--3"></div>
+    </div>
+
+    <!-- Skip button -->
+    <button class="skip-btn" id="skip-btn">Skip <span class="skip-arrow">→</span></button>
+
+    <!-- Progress bar -->
+    <div class="progress-track" id="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+    </div>
+
+    <!-- Slide container with 3D perspective -->
+    <div class="slides-stage" id="slides-stage">
+
+        <!-- SLIDE 1: The Struggle -->
+        <section class="slide slide--active" data-slide="0" data-theme="red">
+            <div class="slide__inner">
+                <div class="floating-emoji" data-depth="0.3">😩</div>
+                <h1 class="slide__title glitch-text" data-text="We've All Been There…">We've All Been There…</h1>
+                <p class="slide__subtitle reveal-text">You type a prompt to AI, hoping for magic…</p>
+
+                <div class="card-3d prompt-card" data-tilt>
+                    <div class="card-3d__inner">
+                        <div class="card-label">YOUR PROMPT</div>
+                        <div class="typed-output" id="typed-text"></div>
+                        <span class="cursor-blink" id="cursor">|</span>
+                    </div>
+                    <div class="card-3d__shine"></div>
+                </div>
+
+                <div class="card-3d response-card card--bad" id="ai-response" data-tilt>
+                    <div class="card-3d__inner">
+                        <div class="card-label card-label--red">AI RESPONSE 💀</div>
+                        <p>"Sure, here's a generic answer that doesn't really help you…</p>
+                        <p class="text-red">It missed your context, your audience, and everything you actually needed."
+                        </p>
+                    </div>
+                    <div class="shake-overlay"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: Why? -->
+        <section class="slide" data-slide="1" data-theme="red">
+            <div class="slide__inner">
+                <div class="floating-emoji" data-depth="0.2">🔍</div>
+                <h1 class="slide__title reveal-text">But <span class="gradient-text-inline">Why?</span></h1>
+                <p class="slide__subtitle reveal-text">Your prompt was missing critical details.</p>
+
+                <div class="exploded-prompt" id="exploded-prompt">
+                    <div class="word-3d" style="--rx: -5deg; --ry: 10deg; --tz: 20px; --delay: 0.2s">Write</div>
+                    <div class="word-3d" style="--rx: 3deg; --ry: -8deg; --tz: 15px; --delay: 0.35s">me</div>
+                    <div class="word-3d" style="--rx: 7deg; --ry: 5deg; --tz: 30px; --delay: 0.5s">something</div>
+                    <div class="word-3d" style="--rx: -4deg; --ry: 12deg; --tz: 10px; --delay: 0.65s">about</div>
+                    <div class="word-3d word-3d--bad" style="--rx: 10deg; --ry: -15deg; --tz: 40px; --delay: 0.8s">
+                        marketing</div>
+                </div>
+
+                <div class="warning-stack">
+                    <div class="warning-pill" style="--delay: 0.5s; --from: -120px">
+                        <span class="warning-x">✗</span> No audience specified
+                    </div>
+                    <div class="warning-pill" style="--delay: 0.7s; --from: 120px">
+                        <span class="warning-x">✗</span> No tone or format
+                    </div>
+                    <div class="warning-pill" style="--delay: 0.9s; --from: -120px">
+                        <span class="warning-x">✗</span> No length or detail level
+                    </div>
+                    <div class="warning-pill" style="--delay: 1.1s; --from: 120px">
+                        <span class="warning-x">✗</span> Vague intent
+                    </div>
+                </div>
+
+                <p class="tagline reveal-text">Vague prompts → Vague answers. <em>Always.</em></p>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: Enter Prompt Intelligence -->
+        <section class="slide" data-slide="2" data-theme="indigo">
+            <div class="slide__inner slide__inner--center">
+                <div class="logo-orbit" id="logo-orbit">
+                    <div class="orbit-ring orbit-ring--1"></div>
+                    <div class="orbit-ring orbit-ring--2"></div>
+                    <div class="orbit-dot orbit-dot--1"></div>
+                    <div class="orbit-dot orbit-dot--2"></div>
+                    <div class="orbit-dot orbit-dot--3"></div>
+                    <svg class="logo-center" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#818cf8"
+                        stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                </div>
+
+                <h1 class="slide__title">
+                    <span class="gradient-text-big reveal-text">Prompt Intelligence</span>
+                </h1>
+                <p class="slide__subtitle reveal-text">We analyze your prompts before AI does.</p>
+
+                <div class="scanner-box" id="scanner-box" data-tilt>
+                    <div class="scanner-text">"Write me something about marketing"</div>
+                    <div class="scanner-beam" id="scanner-beam"></div>
+                </div>
+
+                <div class="scan-readouts">
+                    <div class="readout" style="--delay: 0.8s">
+                        <div class="readout__icon">📊</div>
+                        <div class="readout__label">Quality Score</div>
+                        <div class="readout__value counter" data-target="12" data-suffix="/40">0/40</div>
+                    </div>
+                    <div class="readout" style="--delay: 1.0s">
+                        <div class="readout__icon">⚠️</div>
+                        <div class="readout__label">Missing</div>
+                        <div class="readout__value counter" data-target="4" data-suffix=" gaps">0 gaps</div>
+                    </div>
+                    <div class="readout" style="--delay: 1.2s">
+                        <div class="readout__icon">🎯</div>
+                        <div class="readout__label">Intent</div>
+                        <div class="readout__value">General</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: The Fix — 3D Card Flip -->
+        <section class="slide" data-slide="3" data-theme="green">
+            <div class="slide__inner slide__inner--center">
+                <div class="floating-emoji" data-depth="0.25">✨</div>
+                <h1 class="slide__title reveal-text">The <span
+                        class="gradient-text-inline gradient-green">Transformation</span></h1>
+                <p class="slide__subtitle reveal-text">From vague to powerful — in one click.</p>
+
+                <div class="flip-stage">
+                    <div class="flip-card" id="flip-card">
+                        <div class="flip-card__front card-3d card--bad">
+                            <div class="card-3d__inner">
+                                <div class="card-label card-label--red">BEFORE</div>
+                                <p>"Write me something about marketing"</p>
+                                <div class="score-pill score-pill--bad">
+                                    <span class="score-num" data-target="12">12</span>/40
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card__back card-3d card--good">
+                            <div class="card-3d__inner">
+                                <div class="card-label card-label--green">AFTER</div>
+                                <p>"Write a 500-word blog post about digital marketing strategies for small businesses
+                                    in 2025. Use a professional but friendly tone. Include 3 actionable tips with
+                                    examples. Target audience: startup founders."</p>
+                                <div class="score-pill score-pill--good">
+                                    <span class="score-num" data-target="38">38</span>/40
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="flip-trigger" id="flip-trigger">
+                    <span id="flip-label">🔄 Tap to see the magic</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: Welcome -->
+        <section class="slide" data-slide="4" data-theme="celebration">
+            <div class="slide__inner slide__inner--center">
+                <canvas id="confetti-canvas"></canvas>
+
+                <div class="welcome-logo-3d" id="welcome-logo-3d">
+                    <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#818cf8" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                </div>
+
+                <h1 class="slide__title mega-title reveal-text">
+                    Welcome Aboard! <span class="party">🎉</span>
+                </h1>
+                <p class="slide__subtitle reveal-text">You're all set. Here's how to use it:</p>
+
+                <div class="steps-3d">
+                    <div class="step-card" style="--i: 0" data-tilt>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Select</strong> any text on a webpage</div>
+                        <div class="step-icon">✋</div>
+                    </div>
+                    <div class="step-card" style="--i: 1" data-tilt>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Right-click</strong> → "Improve Prompt"</div>
+                        <div class="step-icon">🖱️</div>
+                    </div>
+                    <div class="step-card" style="--i: 2" data-tilt>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Pick</strong> suggestions & get a refined prompt</div>
+                        <div class="step-icon">⚡</div>
+                    </div>
+                </div>
+
+                <p class="shortcut-hint reveal-text">💡 Pro tip: Use <kbd>Ctrl+I</kbd> as a keyboard shortcut!</p>
+
+                <button class="cta-btn pulse-glow" id="get-started">
+                    Get Started
+                    <span class="cta-arrow">→</span>
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Dots navigation -->
+    <div class="dots" id="dots">
+        <button class="dot dot--active" data-index="0"><span class="dot-ring"></span></button>
+        <button class="dot" data-index="1"><span class="dot-ring"></span></button>
+        <button class="dot" data-index="2"><span class="dot-ring"></span></button>
+        <button class="dot" data-index="3"><span class="dot-ring"></span></button>
+        <button class="dot" data-index="4"><span class="dot-ring"></span></button>
+    </div>
+
+    <!-- Arrow navigation -->
+    <button class="nav-arrow nav-arrow--left" id="prev-btn" style="display:none;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+    </button>
+    <button class="nav-arrow nav-arrow--right" id="next-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <path d="M9 18l6-6-6-6" />
+        </svg>
+    </button>
+
+    <script src="welcome.js"></script>
+</body>
+
+</html>
