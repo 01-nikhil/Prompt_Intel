@@ -36,9 +36,12 @@ async function generate(prompt) {
             body: JSON.stringify({
                 model: GROQ_MODEL,
                 messages: [
+                    { role: 'system', content: 'You are a helpful assistant that responds ONLY in valid JSON. No markdown, no backticks, no explanation.' },
                     { role: 'user', content: prompt },
                 ],
                 temperature: 0.3,
+                max_tokens: 1024,
+                response_format: { type: 'json_object' },
             }),
         });
 
