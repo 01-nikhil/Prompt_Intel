@@ -18,4 +18,7 @@ router.post('/refine', controller.refinePrompt);
 // GET /api/prompt/:id — Retrieve stored prompt
 router.get('/prompt/:id', controller.getPrompt);
 
+// GET /api/debug — Test AI pipeline
+router.get('/debug', controller.debugAI);
+
 module.exports = router;

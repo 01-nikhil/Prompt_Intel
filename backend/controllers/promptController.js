@@ -291,9 +291,48 @@ async function getPrompt(req, res) {
     }
 }
 
+/* ════════════════════════════════════════════════════════
+   GET /api/debug — Diagnostic endpoint for AI pipeline
+   ════════════════════════════════════════════════════════ */
+async function debugAI(req, res) {
+    const diag = {
+        env: {
+            USE_AI: process.env.USE_AI,
+            GROQ_KEY_SET: !!(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE'),
+            GROQ_KEY_PREFIX: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) + '...' : 'NOT SET',
+            NODE_ENV: process.env.NODE_ENV || 'not set',
+        },
+        groqRaw: null,
+        groqError: null,
+        analyzerResult: null,
+        analyzerError: null,
+    };
+
+    // Test raw Groq call
+    try {
+        const groq = require('../services/groqClient');
+        const raw = await groq.generate('Return ONLY this JSON: {"test": "ok"}');
+        diag.groqRaw = raw;
+    } catch (err) {
+        diag.groqError = err.message;
+    }
+
+    // Test full analyzer
+    try {
+        const analyzer = require('../services/promptAnalyzer');
+        const result = await analyzer.analyze('help me build a chat app');
+        diag.analyzerResult = result;
+    } catch (err) {
+        diag.analyzerError = err.message;
+    }
+
+    return res.json(diag);
+}
+
 module.exports = {
     analyzePrompt,
     clarifyPrompt,
     refinePrompt,
     getPrompt,
+    debugAI,
 };
