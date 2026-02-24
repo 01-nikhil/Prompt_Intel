@@ -300,30 +300,40 @@ async function debugAI(req, res) {
             USE_AI: process.env.USE_AI,
             GROQ_KEY_SET: !!(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE'),
             GROQ_KEY_PREFIX: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) + '...' : 'NOT SET',
-            NODE_ENV: process.env.NODE_ENV || 'not set',
+            NODE_VERSION: process.version,
+            FETCH_AVAILABLE: typeof fetch !== 'undefined',
         },
-        groqRaw: null,
+        groqStatus: null,
+        groqResponse: null,
         groqError: null,
-        analyzerResult: null,
-        analyzerError: null,
     };
 
-    // Test raw Groq call
+    // Direct Groq API test — bypass the client wrapper
     try {
-        const groq = require('../services/groqClient');
-        const raw = await groq.generate('Return ONLY this JSON: {"test": "ok"}');
-        diag.groqRaw = raw;
-    } catch (err) {
-        diag.groqError = err.message;
-    }
+        const url = 'https://api.groq.com/openai/v1/chat/completions';
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-specdec',
+                messages: [{ role: 'user', content: 'Say hello in JSON: {"greeting":"hello"}' }],
+                temperature: 0.1,
+                max_tokens: 50,
+            }),
+        });
 
-    // Test full analyzer
-    try {
-        const analyzer = require('../services/promptAnalyzer');
-        const result = await analyzer.analyze('help me build a chat app');
-        diag.analyzerResult = result;
+        diag.groqStatus = resp.status;
+        const body = await resp.text();
+        try {
+            diag.groqResponse = JSON.parse(body);
+        } catch {
+            diag.groqResponse = body.slice(0, 500);
+        }
     } catch (err) {
-        diag.analyzerError = err.message;
+        diag.groqError = err.message || String(err);
     }
 
     return res.json(diag);
