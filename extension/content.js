@@ -17,7 +17,7 @@ if (window.__PI_CONTENT_LOADED__) {
   window.__PI_CONTENT_LOADED__ = true;
 
   /* ── Configuration ─────────────────────────────────────── */
-  const API_BASE = 'http://localhost:3000/api';
+  const API_BASE = 'https://prompt-intel.onrender.com/api';
 
   /* ── State ─────────────────────────────────────────────── */
   let panelHost = null;
