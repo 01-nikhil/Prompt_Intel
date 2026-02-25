@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════
+   Prompt Intel — Full-Page History Styles
+   Theme: Warm Aurora (dark, amber/coral accents)
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f0b15;
+    color: #e8e0f0;
+    min-height: 100vh;
+}
+
+/* ── Page Layout ──────────────────────────────── */
+.history-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+}
+
+/* ── Header ───────────────────────────────────── */
+.history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 170, 100, 0.12);
+}
+
+.history-header__left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #ffb380;
+}
+
+.history-header__title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: linear-gradient(135deg, #ffb380, #ff7eb3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.history-header__subtitle {
+    font-size: 13px;
+    color: rgba(232, 224, 240, 0.45);
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+.history-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.history-count {
+    font-size: 13px;
+    color: rgba(232, 224, 240, 0.4);
+    font-weight: 500;
+}
+
+/* ── Buttons ──────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn--danger {
+    background: rgba(255, 80, 80, 0.1);
+    color: #ff7070;
+    border: 1px solid rgba(255, 80, 80, 0.15);
+}
+
+.btn--danger:hover {
+    background: rgba(255, 80, 80, 0.2);
+    border-color: rgba(255, 80, 80, 0.35);
+    transform: translateY(-1px);
+}
+
+/* ── Card Grid ────────────────────────────────── */
+.history-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* ── Card ─────────────────────────────────────── */
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 170, 100, 0.08);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: all 0.25s ease;
+    animation: cardSlideIn 0.4s ease backwards;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 170, 100, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.card--removing {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+    transition: all 0.35s ease;
+}
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+}
+
+/* Card Header */
+.card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.card__score {
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+
+.card__score-max {
+    font-weight: 400;
+    opacity: 0.6;
+    font-size: 11px;
+}
+
+.card__score--excellent {
+    background: rgba(80, 200, 120, 0.12);
+    color: #50c878;
+}
+
+.card__score--good {
+    background: rgba(100, 180, 255, 0.12);
+    color: #64b4ff;
+}
+
+.card__score--fair {
+    background: rgba(255, 200, 80, 0.12);
+    color: #ffc850;
+}
+
+.card__score--poor {
+    background: rgba(255, 100, 100, 0.12);
+    color: #ff6464;
+}
+
+.card__intent {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(232, 224, 240, 0.35);
+    flex: 1;
+}
+
+.card__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(232, 224, 240, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.card:hover .card__delete {
+    opacity: 1;
+}
+
+.card__delete:hover {
+    background: rgba(255, 80, 80, 0.15);
+    color: #ff6464;
+}
+
+/* Card Body */
+.card__text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(232, 224, 240, 0.75);
+    word-break: break-word;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Card Footer */
+.card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.card__time {
+    font-size: 11px;
+    color: rgba(232, 224, 240, 0.25);
+}
+
+.card__grade-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.card__grade-label--excellent {
+    background: rgba(80, 200, 120, 0.08);
+    color: rgba(80, 200, 120, 0.7);
+}
+
+.card__grade-label--good {
+    background: rgba(100, 180, 255, 0.08);
+    color: rgba(100, 180, 255, 0.7);
+}
+
+.card__grade-label--fair {
+    background: rgba(255, 200, 80, 0.08);
+    color: rgba(255, 200, 80, 0.7);
+}
+
+.card__grade-label--poor {
+    background: rgba(255, 100, 100, 0.08);
+    color: rgba(255, 100, 100, 0.7);
+}
+
+/* ── Empty State ──────────────────────────────── */
+.history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.history-empty h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(232, 224, 240, 0.4);
+}
+
+.history-empty p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(232, 224, 240, 0.25);
+    max-width: 360px;
+}
+
+.history-empty strong {
+    color: rgba(255, 179, 128, 0.6);
+}
+
+/* ── Responsive ───────────────────────────────── */
+@media (max-width: 600px) {
+    .history-page {
+        padding: 24px 16px 40px;
+    }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .history-body {
+        grid-template-columns: 1fr;
+    }
+}

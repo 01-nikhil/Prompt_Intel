@@ -238,13 +238,22 @@ if (window.__PI_CONTENT_LOADED__) {
         <div class="pi-section">
           <div class="pi-section__label" style="display:flex;align-items:center;justify-content:space-between;">
             Your Prompt
-            <button class="pi-btn pi-btn--edit pi-btn--sm" id="pi-edit-original">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              Edit
-            </button>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="pi-btn pi-btn--edit pi-btn--sm" id="pi-history" title="View History">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                History
+              </button>
+              <button class="pi-btn pi-btn--edit pi-btn--sm" id="pi-edit-original">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+              </button>
+            </div>
           </div>
           <div class="pi-original" id="pi-original-text"></div>
           <textarea class="pi-original-edit" id="pi-original-edit" style="display:none;" rows="3"></textarea>
@@ -325,6 +334,34 @@ if (window.__PI_CONTENT_LOADED__) {
         <span id="pi-error-msg"></span>
         <button class="pi-btn pi-btn--secondary" id="pi-retry">Retry</button>
       </div>
+
+      <!-- History view (hidden by default) -->
+      <div class="pi-history-view" id="pi-history-view" style="display:none;">
+        <div class="pi-history-header">
+          <button class="pi-btn pi-btn--sm pi-btn--secondary" id="pi-history-back">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+          </button>
+          <span class="pi-history-title">History</span>
+          <button class="pi-btn pi-btn--sm pi-btn--danger" id="pi-history-clear" title="Clear all">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="pi-history-list" id="pi-history-list"></div>
+        <div class="pi-history-empty" id="pi-history-empty" style="display:none;">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <p>No history yet</p>
+        </div>
+      </div>
     </div>
   `;
   }
@@ -336,6 +373,32 @@ if (window.__PI_CONTENT_LOADED__) {
   function wireEvents(panel) {
     // Close button
     panel.querySelector('.pi-close').addEventListener('click', closePanel);
+
+    // ─── History button — toggle history view inside the panel ───
+    panel.querySelector('#pi-history').addEventListener('click', () => {
+      const results = panel.querySelector('#pi-results');
+      const loading = panel.querySelector('#pi-loading');
+      const error = panel.querySelector('#pi-error');
+      const historyView = panel.querySelector('#pi-history-view');
+      results.style.display = 'none';
+      loading.style.display = 'none';
+      error.style.display = 'none';
+      historyView.style.display = 'block';
+      loadHistory(panel);
+    });
+
+    // ─── History back button ───
+    panel.querySelector('#pi-history-back').addEventListener('click', () => {
+      panel.querySelector('#pi-history-view').style.display = 'none';
+      panel.querySelector('#pi-results').style.display = 'block';
+    });
+
+    // ─── History clear button ───
+    panel.querySelector('#pi-history-clear').addEventListener('click', () => {
+      chrome.storage.local.set({ piHistory: [] }, () => {
+        loadHistory(panel);
+      });
+    });
 
     // ─── Edit original prompt (textarea swap) ───
     panel.querySelector('#pi-edit-original').addEventListener('click', () => {
@@ -778,7 +841,7 @@ if (window.__PI_CONTENT_LOADED__) {
     return selections;
   }
 
-  /* ── History Persistence ────────────────────────────────── */
+  /* ── History Persistence & Rendering ────────────────────── */
 
   function saveToHistory(promptText, data) {
     try {
@@ -801,6 +864,75 @@ if (window.__PI_CONTENT_LOADED__) {
     } catch (e) {
       console.warn('[PI] Could not save to history:', e);
     }
+  }
+
+  function loadHistory(panel) {
+    chrome.storage.local.get({ piHistory: [] }, (result) => {
+      renderHistoryView(panel, result.piHistory);
+    });
+  }
+
+  function renderHistoryView(panel, history) {
+    const list = panel.querySelector('#pi-history-list');
+    const empty = panel.querySelector('#pi-history-empty');
+    const clearBtn = panel.querySelector('#pi-history-clear');
+
+    list.innerHTML = '';
+
+    if (!history || history.length === 0) {
+      list.style.display = 'none';
+      empty.style.display = 'flex';
+      clearBtn.style.display = 'none';
+      return;
+    }
+
+    list.style.display = 'block';
+    empty.style.display = 'none';
+    clearBtn.style.display = 'inline-flex';
+
+    history.forEach((entry) => {
+      const pct = Math.round((entry.score / (entry.maxScore || 40)) * 100);
+      const grade = pct >= 80 ? 'excellent' : pct >= 60 ? 'good' : pct >= 40 ? 'fair' : 'poor';
+      const truncated = (entry.text || '').length > 100 ? entry.text.slice(0, 100) + '…' : entry.text;
+
+      const card = document.createElement('div');
+      card.className = 'pi-hcard';
+      card.innerHTML = `
+        <div class="pi-hcard__top">
+          <span class="pi-hcard__score pi-hcard__score--${grade}">${entry.score}/${entry.maxScore || 40}</span>
+          <span class="pi-hcard__intent">${(entry.intent || 'general').replace(/_/g, ' ')}</span>
+          <button class="pi-hcard__del" data-hid="${entry.id}" title="Delete">&times;</button>
+        </div>
+        <div class="pi-hcard__text">${escapeHtml(truncated)}</div>
+        <div class="pi-hcard__time">${timeAgo(entry.timestamp)}</div>
+      `;
+
+      card.querySelector('.pi-hcard__del').addEventListener('click', () => {
+        chrome.storage.local.get({ piHistory: [] }, (res) => {
+          const updated = res.piHistory.filter((e) => e.id !== entry.id);
+          chrome.storage.local.set({ piHistory: updated }, () => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            setTimeout(() => renderHistoryView(panel, updated), 250);
+          });
+        });
+      });
+
+      list.appendChild(card);
+    });
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const sec = Math.floor((Date.now() - ts) / 1000);
+    if (sec < 60) return 'just now';
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}d ago`;
+    return new Date(ts).toLocaleDateString();
   }
 
   /* ── Utilities ─────────────────────────────────────────── */
@@ -1331,6 +1463,126 @@ if (window.__PI_CONTENT_LOADED__) {
     #pi-error-msg {
       font-size: 12px;
       color: #8888a0;
+    }
+    /* ── History View ── */
+    .pi-history-view {
+      padding: 0;
+    }
+
+    .pi-history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .pi-history-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c4b5fd;
+    }
+
+    .pi-btn--danger {
+      background: rgba(255,80,80,0.1);
+      border: 1px solid rgba(255,80,80,0.2);
+      color: #ff7070;
+    }
+
+    .pi-btn--danger:hover {
+      background: rgba(255,80,80,0.2);
+    }
+
+    .pi-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .pi-history-list::-webkit-scrollbar { width: 4px; }
+    .pi-history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .pi-history-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 30px 0;
+      color: rgba(255,255,255,0.3);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .pi-hcard {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: all 0.25s ease;
+    }
+
+    .pi-hcard:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(167,139,250,0.2);
+    }
+
+    .pi-hcard__top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .pi-hcard__score {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .pi-hcard__score--excellent { background: rgba(80,200,120,0.15); color: #50c878; }
+    .pi-hcard__score--good { background: rgba(100,180,255,0.15); color: #64b4ff; }
+    .pi-hcard__score--fair { background: rgba(255,200,80,0.15); color: #ffc850; }
+    .pi-hcard__score--poor { background: rgba(255,100,100,0.15); color: #ff6464; }
+
+    .pi-hcard__intent {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.3);
+      flex: 1;
+    }
+
+    .pi-hcard__del {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.2);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .pi-hcard:hover .pi-hcard__del { opacity: 1; }
+    .pi-hcard__del:hover { color: #ff6464; background: rgba(255,80,80,0.15); }
+
+    .pi-hcard__text {
+      font-size: 11px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.6);
+      word-break: break-word;
+    }
+
+    .pi-hcard__time {
+      font-size: 9px;
+      color: rgba(255,255,255,0.2);
+      margin-top: 6px;
     }
   `;
   }

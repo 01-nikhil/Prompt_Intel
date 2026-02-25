@@ -1,16 +1,17 @@
 /**
- * popup.js — History Popup for Prompt Intelligence
+ * history.js — Full-page History View for Prompt Intelligence
  *
  * Reads analysis history from chrome.storage.local and renders
- * a scrollable list with score badges, timestamps, and delete actions.
+ * a rich card grid with scores, intents, timestamps, and delete actions.
  */
 
 (function () {
     'use strict';
 
-    const body = document.getElementById('popup-body');
-    const emptyState = document.getElementById('popup-empty');
+    const body = document.getElementById('history-body');
+    const emptyState = document.getElementById('history-empty');
     const clearBtn = document.getElementById('clear-all');
+    const countEl = document.getElementById('history-count');
 
     /* ── Load and Render ────────────────────────────────── */
 
@@ -27,45 +28,53 @@
             body.style.display = 'none';
             emptyState.style.display = 'flex';
             clearBtn.style.display = 'none';
+            countEl.textContent = '';
             return;
         }
 
-        body.style.display = 'block';
+        body.style.display = 'grid';
         emptyState.style.display = 'none';
-        clearBtn.style.display = 'flex';
+        clearBtn.style.display = 'inline-flex';
+        countEl.textContent = `${history.length} prompt${history.length !== 1 ? 's' : ''}`;
 
-        for (const entry of history) {
+        history.forEach((entry, index) => {
             const card = document.createElement('div');
-            card.className = 'history-card';
+            card.className = 'card';
             card.setAttribute('data-id', entry.id);
+            card.style.animationDelay = `${index * 0.05}s`;
 
             const pct = Math.round((entry.score / (entry.maxScore || 40)) * 100);
             const grade = pct >= 80 ? 'excellent' : pct >= 60 ? 'good' : pct >= 40 ? 'fair' : 'poor';
 
             card.innerHTML = `
-        <div class="history-card__top">
-          <span class="history-score history-score--${grade}">${entry.score}/${entry.maxScore || 40}</span>
-          <span class="history-intent">${(entry.intent || 'general').replace(/_/g, ' ')}</span>
-          <button class="history-delete" data-id="${entry.id}" title="Remove">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="card__header">
+          <div class="card__score card__score--${grade}">
+            <span class="card__score-num">${entry.score}</span>
+            <span class="card__score-max">/${entry.maxScore || 40}</span>
+          </div>
+          <span class="card__intent">${(entry.intent || 'general').replace(/_/g, ' ')}</span>
+          <button class="card__delete" data-id="${entry.id}" title="Remove">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
-        <div class="history-card__text">${escapeHtml(truncate(entry.text, 120))}</div>
-        <div class="history-card__time">${timeAgo(entry.timestamp)}</div>
+        <div class="card__text">${escapeHtml(entry.text || '')}</div>
+        <div class="card__footer">
+          <span class="card__time">${formatTime(entry.timestamp)}</span>
+          <span class="card__grade-label card__grade-label--${grade}">${gradeLabel(pct)}</span>
+        </div>
       `;
 
             body.appendChild(card);
-        }
+        });
 
         // Wire delete buttons
-        body.querySelectorAll('.history-delete').forEach((btn) => {
+        body.querySelectorAll('.card__delete').forEach((btn) => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const id = btn.getAttribute('data-id');
-                deleteEntry(id);
+                deleteEntry(btn.getAttribute('data-id'));
             });
         });
     }
@@ -76,11 +85,10 @@
         chrome.storage.local.get({ piHistory: [] }, (result) => {
             const updated = result.piHistory.filter((e) => e.id !== id);
             chrome.storage.local.set({ piHistory: updated }, () => {
-                // Animate removal
                 const card = body.querySelector(`[data-id="${id}"]`);
                 if (card) {
-                    card.classList.add('history-card--removing');
-                    setTimeout(() => renderHistory(updated), 300);
+                    card.classList.add('card--removing');
+                    setTimeout(() => renderHistory(updated), 350);
                 } else {
                     renderHistory(updated);
                 }
@@ -98,27 +106,35 @@
 
     /* ── Utilities ───────────────────────────────────────── */
 
-    function truncate(str, max) {
-        if (!str) return '';
-        return str.length > max ? str.slice(0, max) + '…' : str;
-    }
-
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    function timeAgo(ts) {
-        const seconds = Math.floor((Date.now() - ts) / 1000);
-        if (seconds < 60) return 'just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        const days = Math.floor(hours / 24);
-        if (days < 7) return `${days}d ago`;
-        return new Date(ts).toLocaleDateString();
+    function gradeLabel(pct) {
+        if (pct >= 80) return 'Excellent';
+        if (pct >= 60) return 'Good';
+        if (pct >= 40) return 'Fair';
+        return 'Needs Work';
+    }
+
+    function formatTime(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const now = new Date();
+        const diffMs = now - d;
+        const diffSec = Math.floor(diffMs / 1000);
+
+        if (diffSec < 60) return 'just now';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        const diffDay = Math.floor(diffHr / 24);
+        if (diffDay < 7) return `${diffDay}d ago`;
+
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
     }
 
     /* ── Init ────────────────────────────────────────────── */
