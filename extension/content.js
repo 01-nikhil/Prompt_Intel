@@ -845,8 +845,9 @@ if (window.__PI_CONTENT_LOADED__) {
 
   function saveToHistory(promptText, data) {
     try {
+      const entryId = (data.promptId || '') + '_' + Date.now();
       const entry = {
-        id: data.promptId || Date.now().toString(),
+        id: entryId,
         text: promptText,
         score: data.scores?.total || 0,
         maxScore: 40,
@@ -856,6 +857,11 @@ if (window.__PI_CONTENT_LOADED__) {
 
       chrome.storage.local.get({ piHistory: [] }, (result) => {
         const history = result.piHistory;
+        // De-duplicate: skip if same prompt text was saved in the last 3 seconds
+        const recent = history[0];
+        if (recent && recent.text === promptText && Date.now() - recent.timestamp < 3000) {
+          return;
+        }
         // Prepend new entry and cap at 50
         history.unshift(entry);
         if (history.length > 50) history.length = 50;
