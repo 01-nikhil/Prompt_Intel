@@ -17,7 +17,7 @@ if (window.__PI_CONTENT_LOADED__) {
   window.__PI_CONTENT_LOADED__ = true;
 
   /* ── Configuration ─────────────────────────────────────── */
-  const API_BASE = 'https://prompt-intel.onrender.com/api';
+  const API_BASE = 'https://promptintel-livid.vercel.app/api';
 
   /* ── State ─────────────────────────────────────────────── */
   let panelHost = null;
@@ -514,6 +514,7 @@ if (window.__PI_CONTENT_LOADED__) {
       const data = await res.json();
       currentPromptId = data.promptId;
       renderResults(data);
+      saveToHistory(text, data);
     } catch (err) {
       showError(err.message);
     }
@@ -523,8 +524,12 @@ if (window.__PI_CONTENT_LOADED__) {
     const newSelections = gatherSelections();
     if (Object.keys(newSelections).length === 0) return;
 
-    // Merge new selections with previously applied ones
-    accumulatedSelections = { ...accumulatedSelections, ...newSelections };
+    // Deep-merge new array selections with previously applied ones
+    for (const [gap, values] of Object.entries(newSelections)) {
+      const prev = accumulatedSelections[gap] || [];
+      const merged = [...new Set([...prev, ...values])];
+      accumulatedSelections[gap] = merged;
+    }
 
     showLoading();
 
@@ -747,10 +752,8 @@ if (window.__PI_CONTENT_LOADED__) {
         chip.setAttribute('data-value', option);
 
         chip.addEventListener('click', () => {
-          // Deselect siblings in same group
-          const siblings = chipsRow.querySelectorAll('.pi-chip');
-          siblings.forEach((s) => s.classList.remove('pi-chip--selected'));
-          chip.classList.add('pi-chip--selected');
+          // Toggle selection (multi-select per gap group)
+          chip.classList.toggle('pi-chip--selected');
         });
 
         chipsRow.appendChild(chip);
@@ -767,9 +770,37 @@ if (window.__PI_CONTENT_LOADED__) {
     selectedChips.forEach((chip) => {
       const gap = chip.getAttribute('data-gap');
       const value = chip.getAttribute('data-value');
-      if (gap && value) selections[gap] = value;
+      if (gap && value) {
+        if (!selections[gap]) selections[gap] = [];
+        selections[gap].push(value);
+      }
     });
     return selections;
+  }
+
+  /* ── History Persistence ────────────────────────────────── */
+
+  function saveToHistory(promptText, data) {
+    try {
+      const entry = {
+        id: data.promptId || Date.now().toString(),
+        text: promptText,
+        score: data.scores?.total || 0,
+        maxScore: 40,
+        intent: data.intent?.detected || 'general',
+        timestamp: Date.now(),
+      };
+
+      chrome.storage.local.get({ piHistory: [] }, (result) => {
+        const history = result.piHistory;
+        // Prepend new entry and cap at 50
+        history.unshift(entry);
+        if (history.length > 50) history.length = 50;
+        chrome.storage.local.set({ piHistory: history });
+      });
+    } catch (e) {
+      console.warn('[PI] Could not save to history:', e);
+    }
   }
 
   /* ── Utilities ─────────────────────────────────────────── */

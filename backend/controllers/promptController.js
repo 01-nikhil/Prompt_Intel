@@ -151,7 +151,7 @@ async function clarifyPrompt(req, res) {
             suggestions = aiResult.suggestions;
         } else {
             // Simple rule-based fallback: append constraints to prompt
-            refined = rawText + ' [' + Object.entries(selections).map(([k, v]) => `${k}: ${v}`).join(', ') + ']';
+            refined = rawText + ' [' + Object.entries(selections).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' or ') : v}`).join(', ') + ']';
             const ruleResult = await constraintDetector.detect(refined);
             gaps = ruleResult.gaps;
             suggestions = ruleResult.suggestions;
@@ -318,7 +318,7 @@ async function debugAI(req, res) {
                 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-specdec',
+                model: 'llama-3.3-70b-versatile',
                 messages: [{ role: 'user', content: 'Say hello in JSON: {"greeting":"hello"}' }],
                 temperature: 0.1,
                 max_tokens: 50,
